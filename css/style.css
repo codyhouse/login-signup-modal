@@ -210,7 +210,7 @@ xsigin/signup popup
   position: relative;
   width: 90%;
   max-width: 600px;
-  background: #FFF;
+  background: #d2d8d8;;
   margin: 3em auto 4em;
   cursor: auto;
   border-radius: 0.25em;
@@ -486,6 +486,7 @@ xsigin/signup popup
 
 #cd-login, #cd-signup, #cd-reset-password {
   display: none;
+  background: #FFF;
 }
 
 #cd-login.is-selected, #cd-signup.is-selected, #cd-reset-password.is-selected {
