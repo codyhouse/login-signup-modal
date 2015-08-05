@@ -9,6 +9,7 @@ jQuery(document).ready(function($){
 		$forgot_password_link = $form_login.find('.cd-form-bottom-message a'),
 		$back_to_login_link = $form_forgot_password.find('.cd-form-bottom-message a'),
 		$main_nav = $('.main-nav');
+		$animateTime = 200;
 
 	//open modal
 	$main_nav.on('click', function(event){
@@ -20,7 +21,7 @@ jQuery(document).ready(function($){
 			// on mobile close submenu
 			$main_nav.children('ul').removeClass('is-visible');
 			//show modal layer
-			$form_modal.addClass('is-visible');	
+			$form_modal.addClass('is-visible');
 			//show the selected form
 			( $(event.target).is('.cd-signup') ) ? signup_selected() : login_selected();
 		}
@@ -70,26 +71,43 @@ jQuery(document).ready(function($){
 	});
 
 	function login_selected(){
-		$form_login.addClass('is-selected');
-		$form_signup.removeClass('is-selected');
-		$form_forgot_password.removeClass('is-selected');
-		$tab_login.addClass('selected');
-		$tab_signup.removeClass('selected');
+		if ( $form_signup.is(":visible") ) {
+			modalAnimate($form_signup,$form_login, $tab_login, $tab_signup);
+		} else if ( $form_forgot_password.is(":visible") ) {
+			modalAnimate($form_forgot_password,$form_login, $tab_login, $tab_login);
+		} else {
+			$form_login.fadeIn($animateTime);
+			$tab_login.addClass('selected', $animateTime);
+		}
 	}
 
 	function signup_selected(){
-		$form_login.removeClass('is-selected');
-		$form_signup.addClass('is-selected');
-		$form_forgot_password.removeClass('is-selected');
-		$tab_login.removeClass('selected');
-		$tab_signup.addClass('selected');
+		if ( $form_login.is(":visible") ) {
+			modalAnimate($form_login,$form_signup, $tab_signup, $tab_login);
+		} else if ( $form_forgot_password.is(":visible") ) {
+			modalAnimate($form_forgot_password,$form_signup, $tab_signup, $tab_login);
+		} else {
+			$form_signup.fadeIn($animateTime);
+			$tab_signup.addClass('selected', $animateTime);
+		};
 	}
 
 	function forgot_password_selected(){
-		$form_login.removeClass('is-selected');
-		$form_signup.removeClass('is-selected');
-		$form_forgot_password.addClass('is-selected');
+		modalAnimate($form_login, $form_forgot_password, $tab_login, $tab_login);
 	}
+
+	function modalAnimate ($oldForm, $newForm, $tabIn, $tabOut) {
+        var $oldH = $form_modal_tab.height() + $oldForm.height();
+        var $newH = $form_modal_tab.height() + $newForm.height();
+        $('.cd-user-modal-container').css("height",$oldH);
+        $tabOut.removeClass('selected', $animateTime);
+        $oldForm.fadeOut($animateTime, function(){
+            $('.cd-user-modal-container').animate({height: $newH}, $animateTime, function(){
+                $newForm.fadeIn($animateTime);
+                $tabIn.addClass('selected', $animateTime);
+            });
+        });
+    }
 
 	//REMOVE THIS - it's just to show error messages 
 	$form_login.find('input[type="submit"]').on('click', function(event){
