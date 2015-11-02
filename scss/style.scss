@@ -185,13 +185,11 @@ xsigin/signup popup
 
 	visibility: hidden;
 	opacity: 0;
-	@include transition(opacity .3s 0, visibility 0 .3s);
+	@include transition(opacity .3s, visibility .3s);
 
 	&.is-visible {
 		visibility: visible;
 		opacity: 1;
-
-		@include transition(opacity .3s 0, visibility 0 0);
 
 		.cd-user-modal-container {
 			@include transform(translateY(0));
