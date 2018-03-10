@@ -1,145 +1,135 @@
-jQuery(document).ready(function($){
-	var formModal = $('.cd-user-modal'),
-		formLogin = formModal.find('#cd-login'),
-		formSignup = formModal.find('#cd-signup'),
-		formForgotPassword = formModal.find('#cd-reset-password'),
-		formModalTab = $('.cd-switcher'),
-		tabLogin = formModalTab.children('li').eq(0).children('a'),
-		tabSignup = formModalTab.children('li').eq(1).children('a'),
-		forgotPasswordLink = formLogin.find('.cd-form-bottom-message a'),
-		backToLoginLink = formForgotPassword.find('.cd-form-bottom-message a'),
-		mainNav = $('.main-nav');
+(function(){
+	function ModalSignin( element ) {
+		this.element = element;
+		this.blocks = this.element.getElementsByClassName('js-signin-modal-block');
+		this.switchers = this.element.getElementsByClassName('js-signin-modal-switcher')[0].getElementsByTagName('a'); 
+		this.triggers = document.getElementsByClassName('js-signin-modal-trigger');
+		this.hidePassword = this.element.getElementsByClassName('js-hide-password');
+		this.init();
+	};
 
-	//open modal
-	mainNav.on('click', function(event){
-		$(event.target).is(mainNav) && mainNav.children('ul').toggleClass('is-visible');
-	});
+	ModalSignin.prototype.init = function() {
+		var self = this;
+		//open modal/switch form
+		for(var i =0; i < this.triggers.length; i++) {
+			(function(i){
+				self.triggers[i].addEventListener('click', function(event){
+					if( event.target.hasAttribute('data-signin') ) {
+						event.preventDefault();
+						self.showSigninForm(event.target.getAttribute('data-signin'));
+					}
+				});
+			})(i);
+		}
 
-	//open sign-up form
-	mainNav.on('click', '.cd-signup', signup_selected);
-	//open login-form form
-	mainNav.on('click', '.cd-signin', login_selected);
+		//close modal
+		this.element.addEventListener('click', function(event){
+			if( hasClass(event.target, 'js-signin-modal') || hasClass(event.target, 'js-close') ) {
+				event.preventDefault();
+				removeClass(self.element, 'cd-signin-modal--is-visible');
+			}
+		});
+		//close modal when clicking the esc keyboard button
+		document.addEventListener('keydown', function(event){
+			(event.which=='27') && removeClass(self.element, 'cd-signin-modal--is-visible');
+		});
 
-	//close modal
-	formModal.on('click', function(event){
-		if( $(event.target).is(formModal) || $(event.target).is('.cd-close-form') ) {
-			formModal.removeClass('is-visible');
-		}	
-	});
-	//close modal when clicking the esc keyboard button
-	$(document).keyup(function(event){
-    	if(event.which=='27'){
-    		formModal.removeClass('is-visible');
-	    }
-    });
+		//hide/show password
+		for(var i =0; i < this.hidePassword.length; i++) {
+			(function(i){
+				self.hidePassword[i].addEventListener('click', function(event){
+					self.togglePassword(self.hidePassword[i]);
+				});
+			})(i);
+		} 
 
-	//switch from a tab to another
-	formModalTab.on('click', function(event) {
-		event.preventDefault();
-		( $(event.target).is( tabLogin ) ) ? login_selected() : signup_selected();
-	});
+		//IMPORTANT - REMOVE THIS - it's just to show/hide error messages in the demo
+		this.blocks[0].getElementsByTagName('form')[0].addEventListener('submit', function(event){
+			event.preventDefault();
+			self.toggleError(document.getElementById('signin-email'), true);
+		});
+		this.blocks[1].getElementsByTagName('form')[0].addEventListener('submit', function(event){
+			event.preventDefault();
+			self.toggleError(document.getElementById('signup-username'), true);
+		});
+	};
 
-	//hide or show password
-	$('.hide-password').on('click', function(){
-		var togglePass= $(this),
-			passwordField = togglePass.prev('input');
-		
-		( 'password' == passwordField.attr('type') ) ? passwordField.attr('type', 'text') : passwordField.attr('type', 'password');
-		( 'Hide' == togglePass.text() ) ? togglePass.text('Show') : togglePass.text('Hide');
-		//focus and move cursor to the end of input field
-		passwordField.putCursorAtEnd();
-	});
-
-	//show forgot-password form 
-	forgotPasswordLink.on('click', function(event){
-		event.preventDefault();
-		forgot_password_selected();
-	});
-
-	//back to login from the forgot-password form
-	backToLoginLink.on('click', function(event){
-		event.preventDefault();
-		login_selected();
-	});
-
-	function login_selected(){
-		mainNav.children('ul').removeClass('is-visible');
-		formModal.addClass('is-visible');
-		formLogin.addClass('is-selected');
-		formSignup.removeClass('is-selected');
-		formForgotPassword.removeClass('is-selected');
-		tabLogin.addClass('selected');
-		tabSignup.removeClass('selected');
+	ModalSignin.prototype.togglePassword = function(target) {
+		var password = target.previousElementSibling;
+		( 'password' == password.getAttribute('type') ) ? password.setAttribute('type', 'text') : password.setAttribute('type', 'password');
+		target.textContent = ( 'Hide' == target.textContent ) ? 'Show' : 'Hide';
+		putCursorAtEnd(password);
 	}
 
-	function signup_selected(){
-		mainNav.children('ul').removeClass('is-visible');
-		formModal.addClass('is-visible');
-		formLogin.removeClass('is-selected');
-		formSignup.addClass('is-selected');
-		formForgotPassword.removeClass('is-selected');
-		tabLogin.removeClass('selected');
-		tabSignup.addClass('selected');
+	ModalSignin.prototype.showSigninForm = function(type) {
+		// show modal if not visible
+		!hasClass(this.element, 'cd-signin-modal--is-visible') && addClass(this.element, 'cd-signin-modal--is-visible');
+		// show selected form
+		for( var i=0; i < this.blocks.length; i++ ) {
+			this.blocks[i].getAttribute('data-type') == type ? addClass(this.blocks[i], 'cd-signin-modal__block--is-selected') : removeClass(this.blocks[i], 'cd-signin-modal__block--is-selected');
+		}
+		//update switcher appearance
+		var switcherType = (type == 'signup') ? 'signup' : 'login';
+		for( var i=0; i < this.switchers.length; i++ ) {
+			this.switchers[i].getAttribute('data-type') == switcherType ? addClass(this.switchers[i], 'cd-selected') : removeClass(this.switchers[i], 'cd-selected');
+		} 
+	};
+
+	ModalSignin.prototype.toggleError = function(input, bool) {
+		// used to show error messages in the form
+		toggleClass(input, 'cd-signin-modal__input--has-error', bool);
+		toggleClass(input.nextElementSibling, 'cd-signin-modal__error--is-visible', bool);
 	}
 
-	function forgot_password_selected(){
-		formLogin.removeClass('is-selected');
-		formSignup.removeClass('is-selected');
-		formForgotPassword.addClass('is-selected');
+	var signinModal = document.getElementsByClassName("js-signin-modal")[0];
+	if( signinModal ) {
+		new ModalSignin(signinModal);
 	}
 
-	//REMOVE THIS - it's just to show error messages 
-	formLogin.find('input[type="submit"]').on('click', function(event){
-		event.preventDefault();
-		formLogin.find('input[type="email"]').toggleClass('has-error').next('span').toggleClass('is-visible');
-	});
-	formSignup.find('input[type="submit"]').on('click', function(event){
-		event.preventDefault();
-		formSignup.find('input[type="email"]').toggleClass('has-error').next('span').toggleClass('is-visible');
-	});
-
-
-	//IE9 placeholder fallback
-	//credits http://www.hagenburger.net/BLOG/HTML5-Input-Placeholder-Fix-With-jQuery.html
-	if(!Modernizr.input.placeholder){
-		$('[placeholder]').focus(function() {
-			var input = $(this);
-			if (input.val() == input.attr('placeholder')) {
-				input.val('');
-		  	}
-		}).blur(function() {
-		 	var input = $(this);
-		  	if (input.val() == '' || input.val() == input.attr('placeholder')) {
-				input.val(input.attr('placeholder'));
-		  	}
-		}).blur();
-		$('[placeholder]').parents('form').submit(function() {
-		  	$(this).find('[placeholder]').each(function() {
-				var input = $(this);
-				if (input.val() == input.attr('placeholder')) {
-			 		input.val('');
-				}
-		  	})
+	// toggle main navigation on mobile
+	var mainNav = document.getElementsByClassName('js-main-nav')[0];
+	if(mainNav) {
+		mainNav.addEventListener('click', function(event){
+			if( hasClass(event.target, 'js-main-nav') ){
+				var navList = mainNav.getElementsByTagName('ul')[0];
+				toggleClass(navList, 'cd-main-nav__list--is-visible', !hasClass(navList, 'cd-main-nav__list--is-visible'));
+			} 
 		});
 	}
+	
+	//class manipulations - needed if classList is not supported
+	function hasClass(el, className) {
+	  	if (el.classList) return el.classList.contains(className);
+	  	else return !!el.className.match(new RegExp('(\\s|^)' + className + '(\\s|$)'));
+	}
+	function addClass(el, className) {
+		var classList = className.split(' ');
+	 	if (el.classList) el.classList.add(classList[0]);
+	 	else if (!hasClass(el, classList[0])) el.className += " " + classList[0];
+	 	if (classList.length > 1) addClass(el, classList.slice(1).join(' '));
+	}
+	function removeClass(el, className) {
+		var classList = className.split(' ');
+	  	if (el.classList) el.classList.remove(classList[0]);	
+	  	else if(hasClass(el, classList[0])) {
+	  		var reg = new RegExp('(\\s|^)' + classList[0] + '(\\s|$)');
+	  		el.className=el.className.replace(reg, ' ');
+	  	}
+	  	if (classList.length > 1) removeClass(el, classList.slice(1).join(' '));
+	}
+	function toggleClass(el, className, bool) {
+		if(bool) addClass(el, className);
+		else removeClass(el, className);
+	}
 
-});
-
-
-//credits http://css-tricks.com/snippets/jquery/move-cursor-to-end-of-textarea-or-input/
-jQuery.fn.putCursorAtEnd = function() {
-	return this.each(function() {
-    	// If this function exists...
-    	if (this.setSelectionRange) {
-      		// ... then use it (Doesn't work in IE)
-      		// Double the length because Opera is inconsistent about whether a carriage return is one character or two. Sigh.
-      		var len = $(this).val().length * 2;
-      		this.focus();
-      		this.setSelectionRange(len, len);
+	//credits http://css-tricks.com/snippets/jquery/move-cursor-to-end-of-textarea-or-input/
+	function putCursorAtEnd(el) {
+    	if (el.setSelectionRange) {
+      		var len = el.value.length * 2;
+      		el.focus();
+      		el.setSelectionRange(len, len);
     	} else {
-    		// ... otherwise replace the contents with itself
-    		// (Doesn't work in Google Chrome)
-      		$(this).val($(this).val());
+      		el.value = el.value;
     	}
-	});
-};
+	};
+})();
