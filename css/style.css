@@ -44,6 +44,7 @@ Resource style
 -------------------------------- */
 .cd-main-header {
   position: relative;
+  z-index: 1;
   height: 50px;
   background: #343642;
 }
