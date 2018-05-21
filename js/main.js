@@ -1,4 +1,5 @@
 (function(){
+    //Login/Signup modal window - by CodyHouse.co
 	function ModalSignin( element ) {
 		this.element = element;
 		this.blocks = this.element.getElementsByClassName('js-signin-modal-block');
